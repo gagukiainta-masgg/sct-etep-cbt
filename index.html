@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scientific Creativity Test (SCT-ETEP)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .sketch-canvas {
+      touch-action: none;
+      cursor: crosshair;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .option-card { transition: all 0.15s ease; }
+    .option-card:hover { border-color: #3b82f6; background-color: #f8fafc; }
+    .option-selected {
+      border-color: #1e3a5f !important;
+      background-color: #eff6ff !important;
+      box-shadow: 0 0 0 1px #1e3a5f;
+    }
+    .fade-in { animation: fadeIn 0.22s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar (Clean Student View; Stealth 5x Click on Logo for Researcher Portal) -->
+  <header class="bg-[#1E3A5F] text-white sticky top-0 z-30 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0 select-none">
+        <button id="stealthLogoTrigger" type="button" class="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/20 flex items-center justify-center shrink-0 transition" aria-label="SCT-ETEP Logo">
+          <i data-lucide="flask-conical" class="w-4 h-4 text-sky-200"></i>
+        </button>
+        <div class="truncate">
+          <div class="text-sm font-bold tracking-tight leading-tight truncate">SCT-ETEP</div>
+          <div class="text-[11px] text-sky-200 leading-tight truncate">Scientific Creativity Test</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div id="headerResearcherBadge" class="hidden items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            Portal Peneliti
+          </span>
+          <button id="btnExitResearcher" type="button" class="text-xs font-semibold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition">
+            Keluar ke Mahasiswa
+          </button>
+        </div>
+        <div id="headerTimerBox" class="hidden items-center gap-1.5 bg-slate-900/40 border border-white/15 px-3 py-1 rounded-lg font-mono text-sm font-semibold">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-300"></i>
+          <span id="timerDisplay">02:30</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- Warning if API_URL not configured -->
+    <div id="apiConfigWarning" class="hidden mb-5 bg-amber-50 border border-amber-300 text-amber-950 rounded-xl p-4 text-xs leading-relaxed">
+      <strong>Perhatian Peneliti:</strong> Variabel <code>API_URL</code> pada file <code>index.html</code> belum diisi dengan URL Web App Google Apps Script Anda (berakhiran <code>/exec</code>). Ikuti <code>PANDUAN_DEPLOY_5_MENIT.txt</code> untuk menghubungkan ke Google Sheets.
+    </div>
+
+    <!-- SCREEN 1: STUDENT LANDING PAGE -->
+    <section id="screenLanding" class="fade-in space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-[#1E3A5F] to-[#2B6CB0] px-6 py-7 text-white">
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+            Scientific Creativity Test (SCT-ETEP)
+          </h1>
+          <p class="text-sky-100 text-sm sm:text-base max-w-2xl leading-relaxed">
+            Selamat datang. Silakan baca petunjuk pengerjaan dengan saksama, lengkapi data identitas Anda, dan masukkan kode token kelas dari dosen pengampu sebelum memulai.
+          </p>
+        </div>
+
+        <div id="sessionClosedBanner" class="hidden bg-rose-50 border-b border-rose-200 px-6 py-3.5 text-xs sm:text-sm text-rose-800 flex items-center gap-2 font-medium">
+          <i data-lucide="lock" class="w-4 h-4 shrink-0"></i>
+          <span>Sesi pengerjaan saat ini sedang ditutup oleh dosen pengampu. Silakan tunggu hingga sesi dibuka kembali.</span>
+        </div>
+
+        <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div class="lg:col-span-7 space-y-5">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Data Identitas Mahasiswa</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Pastikan NIM dan asal perguruan tinggi diisi dengan benar. Setiap NIM hanya dapat mengerjakan tes satu kali.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="inputName" class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap *</label>
+                <input id="inputName" type="text" placeholder="Contoh: Rina Kartika" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0] focus:border-transparent" />
+              </div>
+              <div>
+                <label for="inputNim" class="block text-xs font-semibold text-slate-700 mb-1.5">NIM *</label>
+                <input id="inputNim" type="text" placeholder="Contoh: 126205210045" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0] focus:border-transparent" />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="inputCampus" class="block text-xs font-semibold text-slate-700 mb-1.5">Asal Perguruan Tinggi *</label>
+                <select id="inputCampus" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2B6CB0] focus:border-transparent"></select>
+              </div>
+              <div>
+                <label for="inputProdi" class="block text-xs font-semibold text-slate-700 mb-1.5">Program Studi *</label>
+                <input id="inputProdi" type="text" placeholder="Contoh: PGMI / PGSD" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0] focus:border-transparent" />
+              </div>
+              <div>
+                <label for="inputSemester" class="block text-xs font-semibold text-slate-700 mb-1.5">Semester *</label>
+                <select id="inputSemester" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2B6CB0] focus:border-transparent">
+                  <option value="">-- Pilih Semester --</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                  <option value="9">Semester &gt; 8</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="customCampusWrap" class="hidden">
+              <label for="inputCustomCampus" class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Perguruan Tinggi Lainnya *</label>
+              <input id="inputCustomCampus" type="text" placeholder="Masukkan nama lengkap perguruan tinggi..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+            </div>
+
+            <div>
+              <label for="inputToken" class="block text-xs font-semibold text-slate-700 mb-1.5">Kode Token Sesi Kelas *</label>
+              <input id="inputToken" type="text" placeholder="Kode token dari dosen" class="w-full sm:w-64 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+            </div>
+
+            <label class="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 cursor-pointer">
+              <input id="inputConsent" type="checkbox" class="mt-0.5 w-4 h-4 accent-[#1E3A5F] rounded shrink-0" />
+              <span class="text-xs text-slate-700 leading-relaxed">
+                Saya telah membaca petunjuk pengerjaan dan bersedia berpartisipasi secara sukarela. Saya memahami bahwa jawaban saya bersifat rahasia dan hanya digunakan untuk kepentingan penelitian akademik.
+              </span>
+            </label>
+
+            <div id="landingError" class="hidden text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5"></div>
+
+            <div id="alreadySubmittedBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-1.5 text-xs text-amber-950">
+              <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                NIM Ini Sudah Menyelesaikan Asesmen
+              </div>
+              <p id="alreadySubmittedDetail" class="leading-relaxed"></p>
+            </div>
+
+            <div class="pt-1">
+              <button id="btnStartTest" type="button" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm px-7 py-3 rounded-xl shadow-sm transition">
+                <span>Mulai Mengerjakan</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 bg-slate-50 rounded-2xl border border-slate-200 p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="clipboard-list" class="w-4 h-4 text-[#2B6CB0]"></i>
+              Petunjuk Pengerjaan
+            </h3>
+            <ol class="space-y-3 text-xs text-slate-700 leading-relaxed">
+              <li class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#1E3A5F] text-white font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                <div>Tes terdiri dari <strong>7 butir soal</strong> dengan total estimasi waktu sekitar <strong>28 menit</strong>. Setiap soal memiliki batas waktu otomatis per langkah.</div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#2B6CB0] text-white font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                <div>Pada <strong>Langkah 1</strong>, tuliskan sebanyak mungkin ide orisinal Anda secara mandiri (untuk soal nomor 7, Anda dapat menggambar di kanvas atau mengunggah foto sketsa kertas).</div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                <div>Setelah menekan tombol <strong>Kunci &amp; Lanjut</strong>, jawaban Langkah 1 akan tersimpan otomatis dan <strong>tidak dapat diubah kembali</strong> saat Anda mengerjakan Langkah 2 (pilihan evaluasi).</div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                <div>Kerjakan secara jujur dan mandiri tanpa menggunakan bantuan AI atau membuka tab pencarian lain. Setiap peserta hanya memiliki <strong>1 kali kesempatan</strong> pengisian.</div>
+              </li>
+            </ol>
+            <div class="pt-3 border-t border-slate-200 grid grid-cols-3 gap-2 text-center">
+              <div class="bg-white rounded-xl p-2.5 border border-slate-200">
+                <div class="text-base font-extrabold text-[#1E3A5F]">7 Soal</div>
+                <div class="text-[11px] text-slate-500">Berurutan</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-slate-200">
+                <div class="text-base font-extrabold text-[#2B6CB0]">~28 mnt</div>
+                <div class="text-[11px] text-slate-500">Batas Waktu</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-slate-200">
+                <div class="text-base font-extrabold text-emerald-600">1x Isi</div>
+                <div class="text-[11px] text-slate-500">Per NIM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: ACTIVE CBT WORKSPACE -->
+    <section id="screenExam" class="hidden fade-in space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Progres Pengerjaan — <span id="progressText" class="text-[#1E3A5F] font-bold">Butir 1 dari 7</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span id="stageBadge" class="inline-flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-full bg-sky-100 text-[#1E3A5F]">
+              <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+              Langkah 1: Ide Orisinal
+            </span>
+          </div>
+        </div>
+        <div id="stepperRow" class="grid grid-cols-7 gap-1.5 sm:gap-2"></div>
+      </div>
+
+      <div id="reviewerBanner" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900">
+        <div class="flex items-center gap-2">
+          <i data-lucide="microscope" class="w-4 h-4 text-amber-700 shrink-0"></i>
+          <span><strong>Simulasi Review Peneliti:</strong> Navigasi bebas aktif &amp; kunci evaluasi (dimuat dari server) ditampilkan pada Langkah 2.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnSwitchStageReview" type="button" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">Lihat Langkah 2</button>
+          <button id="btnBackToResearcherPortal" type="button" class="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-semibold px-3 py-1.5 rounded-lg transition">Kembali ke Portal Peneliti</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span id="itemCodeBadge" class="inline-block text-xs font-bold text-white bg-[#1E3A5F] px-2.5 py-0.5 rounded-md mr-2">Soal 1</span>
+            <span id="itemCategoryTitle" class="text-sm font-bold text-slate-800">Unusual Uses</span>
+          </div>
+          <div class="text-xs text-slate-500 font-medium" id="itemDomainTag">Topik IPA</div>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div class="bg-sky-50/60 border-l-4 border-[#2B6CB0] rounded-r-xl p-4 sm:p-5">
+            <div class="text-xs font-bold uppercase tracking-wider text-[#2B6CB0] mb-1.5" id="promptStageSubtitle">Langkah 1 — Tuliskan Ide Anda</div>
+            <p id="itemPromptText" class="text-sm sm:text-base text-slate-800 leading-relaxed font-medium"></p>
+            <p id="itemExampleNote" class="text-xs text-slate-600 italic mt-2"></p>
+          </div>
+
+          <div id="stage1Container" class="space-y-4">
+            <div id="s1DynamicListWrap" class="hidden space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wide">Daftar Ide Anda (1 Kotak = 1 Ide)</label>
+                <span id="ideaCountBadge" class="text-xs font-semibold text-[#2B6CB0] bg-sky-50 px-2.5 py-1 rounded-full">0 ide terisi</span>
+              </div>
+              <div id="ideaInputsList" class="space-y-2.5"></div>
+              <button id="btnAddIdea" type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2B6CB0] hover:text-[#1E3A5F] bg-sky-50 hover:bg-sky-100 px-3.5 py-2 rounded-xl transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Tambah Kolom Ide Baru
+              </button>
+            </div>
+
+            <div id="s1ExperimentWrap" class="hidden space-y-4">
+              <div>
+                <label for="ceTools" class="block text-xs font-bold text-slate-700 mb-1.5">1. Alat &amp; Bahan yang Diperlukan</label>
+                <textarea id="ceTools" rows="2" placeholder="Contoh: Termometer, stopwatch, gelas ukur, air panas..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"></textarea>
+              </div>
+              <div>
+                <label for="cePrinciple" class="block text-xs font-bold text-slate-700 mb-1.5">2. Prinsip Sains yang Diuji</label>
+                <textarea id="cePrinciple" rows="2" placeholder="Jelaskan konsep IPA yang mendasari perbandingan cangkir logam vs. plastik..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"></textarea>
+              </div>
+              <div>
+                <label for="ceProcedure" class="block text-xs font-bold text-slate-700 mb-1.5">3. Langkah Prosedur Eksperimen &amp; Pengukuran</label>
+                <textarea id="ceProcedure" rows="3" placeholder="Tuliskan langkah kerja sistematis dari awal hingga penarikan kesimpulan..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"></textarea>
+              </div>
+            </div>
+
+            <div id="s1DesignWrap" class="hidden space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="pdName" class="block text-xs font-bold text-slate-700 mb-1.5">Nama Alat Rancangan Anda</label>
+                  <input id="pdName" type="text" placeholder="Contoh: Roda Tanam Padi Presisi" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+                </div>
+                <div>
+                  <label for="pdPrinciple" class="block text-xs font-bold text-slate-700 mb-1.5">Prinsip Konsep IPA yang Diterapkan</label>
+                  <input id="pdPrinciple" type="text" placeholder="Contoh: Roda berporos, gravitasi, tuas..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+                </div>
+              </div>
+
+              <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i data-lucide="pencil-ruler" class="w-4 h-4 text-[#2B6CB0]"></i>
+                    Media Sketsa Desain Produk (Pilih Salah Satu)
+                  </div>
+                  <div class="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-xs font-semibold">
+                    <button id="tabSketchDraw" type="button" class="px-3 py-1 rounded-md bg-white text-[#1E3A5F] shadow-sm transition">Kanvas Digital</button>
+                    <button id="tabSketchUpload" type="button" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">Unggah Foto Kertas</button>
+                  </div>
+                </div>
+
+                <div id="sketchDrawPane" class="space-y-2.5">
+                  <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-slate-500 font-medium">Warna:</span>
+                      <button type="button" data-color="#0f172a" class="pen-color-btn w-6 h-6 rounded-full bg-slate-900 ring-2 ring-offset-1 ring-[#2B6CB0]"></button>
+                      <button type="button" data-color="#1d4ed8" class="pen-color-btn w-6 h-6 rounded-full bg-blue-700"></button>
+                      <button type="button" data-color="#dc2626" class="pen-color-btn w-6 h-6 rounded-full bg-red-600"></button>
+                      <button type="button" data-color="#059669" class="pen-color-btn w-6 h-6 rounded-full bg-emerald-600"></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button id="btnCanvasUndo" type="button" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium">Undo</button>
+                      <button id="btnCanvasClear" type="button" class="px-2.5 py-1 rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 font-medium">Bersihkan</button>
+                    </div>
+                  </div>
+                  <div class="w-full overflow-hidden rounded-xl border border-slate-300 bg-white">
+                    <canvas id="pdCanvas" class="sketch-canvas w-full h-60 block"></canvas>
+                  </div>
+                  <p class="text-[11px] text-slate-500">Gunakan mouse, trackpad, atau jari (layar sentuh) untuk menggambar sketsa alat Anda.</p>
+                </div>
+
+                <div id="sketchUploadPane" class="hidden space-y-3">
+                  <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center bg-white">
+                    <i data-lucide="camera" class="w-7 h-7 text-slate-400 mx-auto mb-2"></i>
+                    <p class="text-xs text-slate-600 mb-3">Gambarlah sketsa alat pada kertas kosong dengan jelas, lalu foto dan unggah di sini (maks. ukuran otomatis dikompresi agar cepat terkirim).</p>
+                    <input id="pdFileInput" type="file" accept="image/*" class="hidden" />
+                    <button id="btnTriggerUpload" type="button" class="inline-flex items-center gap-1.5 bg-[#2B6CB0] hover:bg-[#1E3A5F] text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                      <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                      Pilih / Ambil Foto Sketsa
+                    </button>
+                  </div>
+                  <div id="pdUploadPreviewWrap" class="hidden bg-white border border-slate-200 rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold text-emerald-700">Pratinjau Foto Sketsa Terunggah</span>
+                      <button id="btnRemoveUpload" type="button" class="text-xs text-rose-600 hover:underline font-medium">Hapus Foto</button>
+                    </div>
+                    <img id="pdUploadPreview" alt="Pratinjau Sketsa" class="max-h-56 mx-auto rounded-lg border border-slate-200 object-contain" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label for="pdMechanism" class="block text-xs font-bold text-slate-700 mb-1.5">Penjelasan Cara Kerja Alat &amp; Label Bagian Utama</label>
+                <textarea id="pdMechanism" rows="3" placeholder="Jelaskan bagian-bagian utama alat pada sketsa dan bagaimana alat tersebut menjatuhkan benih secara seragam..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="stage2Container" class="hidden space-y-4">
+            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl px-4 py-2.5 text-xs">
+              <i data-lucide="lock" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+              <span><strong>Jawaban Langkah 1 telah dikunci.</strong> Sekarang selesaikan <strong>Langkah 2 (Evaluasi Ide)</strong> di bawah ini.</span>
+            </div>
+
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                <h3 id="s2Instruction" class="text-sm font-bold text-slate-900"></h3>
+                <span id="s2SelectionBadge" class="text-xs font-semibold text-[#1E3A5F] bg-slate-100 px-2.5 py-1 rounded-full">Terpilih: 0</span>
+              </div>
+              <div id="s2OptionsList" class="space-y-2.5"></div>
+            </div>
+
+            <div id="s2ReviewerKeyBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-950 space-y-1.5">
+              <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                <i data-lucide="key-round" class="w-4 h-4"></i>
+                Kunci Evaluasi &amp; Rasional Ilmiah (Dari Server)
+              </div>
+              <p id="s2ReviewerRationale" class="leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-xs text-slate-500 flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span>Jawaban tersimpan otomatis pada setiap langkah.</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button id="btnPrevReview" type="button" class="hidden items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span>Sebelumnya</span>
+            </button>
+            <button id="btnLockAndNext" type="button" class="inline-flex items-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-sm transition">
+              <span id="btnLockAndNextLabel">Kunci Langkah 1 &amp; Lanjut</span>
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: STUDENT COMPLETION RECEIPT -->
+    <section id="screenStudentDone" class="hidden fade-in max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center space-y-5">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+          <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900">Terima Kasih! Jawaban Anda Telah Terekam</h2>
+          <p class="text-sm text-slate-600 mt-1.5">Partisipasi Anda telah tersimpan aman di server penelitian. Silakan simpan tangkapan layar bukti selesai di bawah ini.</p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs sm:text-sm space-y-2">
+          <div class="flex justify-between gap-2"><span class="text-slate-500">Kode Bukti Selesai:</span><span id="receiptCode" class="font-mono font-bold text-[#1E3A5F]">SCT-0000</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-500">Nama Peserta:</span><span id="receiptName" class="font-semibold text-slate-900">-</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-500">NIM:</span><span id="receiptNim" class="font-semibold text-slate-900">-</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-500">Perguruan Tinggi:</span><span id="receiptCampus" class="font-semibold text-slate-900 text-right">-</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-500">Waktu Pengumpulan:</span><span id="receiptTime" class="font-semibold text-slate-900">-</span></div>
+        </div>
+
+        <p class="text-xs text-slate-500">Status NIM Anda kini terkunci di server sebagai <strong>Sudah Mengisi</strong>.</p>
+        <div class="pt-2">
+          <button id="btnDoneBackHome" type="button" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-5 py-2.5 rounded-xl transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            Kembali ke Halaman Awal
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: STEALTH RESEARCHER PORTAL (SERVER-AUTHENTICATED) -->
+    <section id="screenResearcher" class="hidden fade-in space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-900 text-white px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-amber-300">Tersinkronisasi dengan Google Sheets</div>
+            <h2 class="text-xl font-extrabold mt-0.5">Portal Peneliti — SCT-ETEP</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="tabResDb" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-900 transition">Database Responden</button>
+            <button id="tabResItems" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition">Review 7 Butir &amp; Kunci</button>
+            <button id="tabResSettings" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition">Pengaturan Token &amp; Kampus</button>
+          </div>
+        </div>
+
+        <div id="paneResDb" class="p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Rekapitulasi Responden di Server</h3>
+              <p class="text-xs text-slate-500">Total responden tersimpan: <strong id="resTotalCount">0</strong> mahasiswa</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btnRefreshDb" type="button" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl transition">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                Muat Ulang
+              </button>
+              <button id="btnExportAllCsv" type="button" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                CSV Wide (Siap SPSS)
+              </button>
+              <button id="btnExportLongCsv" type="button" class="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition">
+                <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
+                CSV Long (Hitung Originality)
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-700">
+                  <th class="py-3 px-3.5 font-bold">Kode</th>
+                  <th class="py-3 px-3.5 font-bold">Nama &amp; NIM</th>
+                  <th class="py-3 px-3.5 font-bold">Perguruan Tinggi</th>
+                  <th class="py-3 px-3.5 font-bold text-center">Ide S1</th>
+                  <th class="py-3 px-3.5 font-bold text-center">Skor S2</th>
+                  <th class="py-3 px-3.5 font-bold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="resDbTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="paneResItems" class="hidden p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Daftar 7 Butir Instrumen &amp; Kunci Evaluasi (Dari Server)</h3>
+              <p class="text-xs text-slate-500">Kunci ini hanya ditarik setelah PIN peneliti terverifikasi oleh server.</p>
+            </div>
+            <button id="btnLaunchReviewSim" type="button" class="inline-flex items-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              Buka Simulasi Soal (Mode Review)
+            </button>
+          </div>
+          <div id="resItemsList" class="space-y-4"></div>
+        </div>
+
+        <div id="paneResSettings" class="hidden p-6 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="border border-slate-200 rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-bold text-slate-900">Kontrol Token Sesi Kelas</h3>
+              <div>
+                <label for="settingTokenInput" class="block text-xs font-semibold text-slate-700 mb-1.5">Kode Token Aktif</label>
+                <div class="flex gap-2">
+                  <input id="settingTokenInput" type="text" class="flex-1 rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-mono uppercase" />
+                  <button id="btnSaveToken" type="button" class="bg-[#1E3A5F] hover:bg-[#162d4a] text-white text-xs font-semibold px-4 py-2 rounded-xl transition">Simpan</button>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-800">Status Akses Sesi Tes</div>
+                  <div class="text-[11px] text-slate-500" id="sessionStatusLabel">-</div>
+                </div>
+                <button id="btnToggleSessionOpen" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition">Tutup Sesi</button>
+              </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-bold text-slate-900">Keamanan PIN Peneliti</h3>
+              <div>
+                <label for="settingPinInput" class="block text-xs font-semibold text-slate-700 mb-1.5">Ubah PIN Portal Peneliti</label>
+                <div class="flex gap-2">
+                  <input id="settingPinInput" type="password" placeholder="PIN baru (min. 4 digit)" class="flex-1 rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-mono" />
+                  <button id="btnSavePin" type="button" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl transition">Perbarui PIN</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 border border-slate-200 rounded-xl p-5 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900">Daftar Opsi Asal Perguruan Tinggi (Lokasi Penelitian)</h3>
+                  <p class="text-[11px] text-slate-500">Tulis 1 perguruan tinggi per baris. Perubahan langsung tersimpan ke Google Sheets Config.</p>
+                </div>
+                <button id="btnSaveCampuses" type="button" class="bg-[#1E3A5F] hover:bg-[#162d4a] text-white text-xs font-semibold px-4 py-2 rounded-xl transition">Simpan Daftar Kampus</button>
+              </div>
+              <textarea id="settingCampusesInput" rows="4" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl px-6 py-5 shadow-xl flex items-center gap-3 text-sm font-semibold text-slate-800">
+      <div class="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin"></div>
+      <span id="loadingText">Menghubungkan ke server...</span>
+    </div>
+  </div>
+
+  <!-- Modal 1: Lock Stage 1 Confirmation -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 fade-in">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+          <i data-lucide="lock" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Kunci Jawaban Langkah 1?</h3>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+            Setelah dikunci, jawaban terbuka Anda pada Langkah 1 akan disimpan permanen dan tidak dapat diubah kembali saat memasuki Langkah 2.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button id="btnModalCancel" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Batal</button>
+        <button id="btnModalConfirm" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1E3A5F] hover:bg-[#162d4a] text-white transition">Ya, Kunci &amp; Lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Stealth Researcher PIN Login -->
+  <div id="researcherLoginModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-4 fade-in">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#1E3A5F] text-white flex items-center justify-center shrink-0">
+          <i data-lucide="key-round" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Login Portal Peneliti</h3>
+          <p class="text-xs text-slate-500">PIN diverifikasi langsung di server Google Apps Script.</p>
+        </div>
+      </div>
+      <div>
+        <input id="inputResearcherPin" type="password" placeholder="Masukkan PIN Peneliti..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+        <div id="pinErrorMsg" class="hidden text-xs text-rose-600 font-medium mt-1.5">PIN salah atau gagal terhubung ke server.</div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button id="btnPinCancel" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Batal</button>
+        <button id="btnPinSubmit" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1E3A5F] hover:bg-[#162d4a] text-white transition">Masuk Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastBox" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 fade-in">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toastText">Berhasil.</span>
+  </div>
+
+  <script>
+    // =========================================================================
+    // KONFIGURASI WAJIB: TEMPEL URL WEB APP GOOGLE APPS SCRIPT (/exec) DI SINI
+    // =========================================================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwuNPvizKI1fM7x4Bye1H2Fyn7PpFvbC7ZGdZJyZPixX8mlLOTggMhpxsyIbIdFpvze/exec';
+
+    // DATA 7 BUTIR SOAL (TANPA KUNCI JAWABAN — KUNCI HANYA ADA DI Code.gs!)
+    const ITEMS = [
+      {
+        id: 'UU-2', number: 1, category: 'Unusual Uses in Scientific Purpose', domain: 'Sifat Logam, Optik, Kalor & Bunyi',
+        inputType: 'dynamic_list', s1Seconds: 150, s2Seconds: 60,
+        prompt: 'Tentukan sebanyak mungkin fungsi atau kegunaan dari sebuah SENDOK LOGAM dalam penyelidikan atau eksperimen ilmiah!',
+        exampleNote: 'Contoh umum: sendok logam dapat digunakan untuk memantulkan cahaya pada percobaan cermin cekung/cembung. Cobalah memikirkan kegunaan ilmiah lain yang berbeda.',
+        s2Instruction: 'Pilih 2 fungsi sendok logam yang paling akurat dan kuat secara prinsip fisika untuk penyelidikan ilmiah:',
+        s2MaxSelect: 2,
+        s2Options: [
+          { key: 'A', text: 'Menguji perbedaan konduktivitas termal (hantaran panas) berbagai bahan dengan menempelkan mentega di gagangnya lalu mencelupkan ujungnya ke air panas.' },
+          { key: 'B', text: 'Dijadikan hiasan dinding kelas IPA agar ruang laboratorium tampak lebih menarik bagi siswa SD.' },
+          { key: 'C', text: 'Digunakan sebagai penghantar dalam rangkaian listrik sederhana untuk membuktikan sifat konduktor listrik pada logam.' },
+          { key: 'D', text: 'Digunakan untuk menampung air hujan tanpa alat ukur agar siswa bisa menebak volume hujan secara kira-kira.' },
+          { key: 'E', text: 'Diletakkan di dalam kulkas untuk menghasilkan energi listrik statis secara otomatis.' }
+        ]
+      },
+      {
+        id: 'S-1', number: 2, category: 'Sensitivity to Science Problems', domain: 'Meteorologi, Cuaca & Iklim',
+        inputType: 'dynamic_list', s1Seconds: 150, s2Seconds: 60,
+        prompt: 'Bayangkan Anda sedang mengunjungi laboratorium pengamatan meteorologi dan iklim serta berkesempatan berdiskusi dengan para ilmuwan pemantau pola cuaca. Pertanyaan penyelidikan ilmiah apa saja yang akan Anda ajukan?',
+        exampleNote: 'Contoh umum: Bagaimana proses pembentukan awan di atmosfer? Ajukan pertanyaan yang mendorong penyelidikan hubungan sebab-akibat.',
+        s2Instruction: 'Pilih 1 pertanyaan yang paling layak diuji secara ilmiah (testable) karena memuat variabel yang jelas dan terukur:',
+        s2MaxSelect: 1,
+        s2Options: [
+          { key: 'A', text: 'Mengapa awan di langit selalu terlihat lebih indah pada sore hari dibandingkan siang hari?' },
+          { key: 'B', text: 'Bagaimana pengaruh perubahan tekanan udara permukaan dan kelembapan relatif terhadap kecepatan pembentukan awan kumulonimbus di wilayah tropis?' },
+          { key: 'C', text: 'Apakah ilmuwan meteorologi merasa lelah saat harus memantau data satelit setiap hari?' },
+          { key: 'D', text: 'Berapa harga alat pengukur curah hujan otomatis yang dipasang di halaman laboratorium ini?' }
+        ]
+      },
+      {
+        id: 'TP-2', number: 3, category: 'Ability to Improve a Technical Product', domain: 'Energi Terbarukan & Mekanika',
+        inputType: 'dynamic_list', s1Seconds: 180, s2Seconds: 60,
+        prompt: 'Anda sedang mengembangkan sebuah KENDARAAN HEMAT ENERGI yang dapat melaju lebih efisien atau beroperasi tanpa bahan bakar fosil. Inovasi sains-teknis apa saja yang akan Anda terapkan pada kendaraan tersebut?',
+        exampleNote: 'Tuliskan inovasi spesifik beserta prinsip sains yang mendukungnya (misalnya aerodinamika, konversi energi, atau pengurangan gesekan).',
+        s2Instruction: 'Pilih 2 usulan inovasi yang paling valid secara hukum fisika dan paling efektif meningkatkan efisiensi energi kendaraan:',
+        s2MaxSelect: 2,
+        s2Options: [
+          { key: 'A', text: 'Memasang sistem pengereman regeneratif (regenerative braking) untuk mengubah energi kinetik saat mengerem menjadi energi listrik pengisi baterai.' },
+          { key: 'B', text: 'Menempatkan kipas angin di atap mobil yang mengembuskan angin ke layar di depan mobil agar mobil melaju terus tanpa sumber energi luar.' },
+          { key: 'C', text: 'Merancang bodi berprofil aerodinamis dari material komposit ringan untuk memperkecil hambatan udara (drag force) dan massa total kendaraan.' },
+          { key: 'D', text: 'Mengecat seluruh bodi kendaraan dengan warna merah menyala agar secara fisis dapat meningkatkan kecepatan mesin.' },
+          { key: 'E', text: 'Memasang magnet permanen di depan bemper agar menarik bodi besi kendaraan maju sendiri tanpa tenaga tambahan.' }
+        ]
+      },
+      {
+        id: 'SI-2', number: 4, category: 'Scientific Imagination', domain: 'Ekologi, Adaptasi & Klimatologi',
+        inputType: 'dynamic_list', s1Seconds: 150, s2Seconds: 60,
+        prompt: 'Bayangkan suhu seluruh permukaan Bumi membeku secara permanen seperti di wilayah Kutub Utara (Arktik) dan Antarktika. Apa saja dampak ilmiah yang akan terjadi terhadap kehidupan manusia, hewan, dan tumbuhan?',
+        exampleNote: 'Pikirkan dampak berantai pada fotosintesis, siklus air, adaptasi fisiologis organisme, hingga ekosistem.',
+        s2Instruction: 'Pilih 2 dampak rantai ekologis yang paling koheren dan logis secara ilmiah:',
+        s2MaxSelect: 2,
+        s2Options: [
+          { key: 'A', text: 'Penurunan drastis ketersediaan air cair dan suhu ekstrem memutus laju fotosintesis tumbuhan darat, yang berakibat runtuhnya rantai makanan dari tingkat produsen.' },
+          { key: 'B', text: 'Seluruh ikan laut langsung punah dalam satu hari karena seluruh samudra membeku mulai dari dasar laut ke permukaan.' },
+          { key: 'C', text: 'Organisme yang mampu bertahan akan mengalami tekanan seleksi menuju adaptasi isolasi termal (lapisan lemak/bulu tebal) atau dormansi metabolik.' },
+          { key: 'D', text: 'Tumbuhan tropis akan otomatis berubah menjadi hewan berdarah panas dalam satu generasi agar tetap hangat.' },
+          { key: 'E', text: 'Gravitasi Bumi akan menghilang karena seluruh air berubah wujud menjadi es padat.' }
+        ]
+      },
+      {
+        id: 'PS-2', number: 5, category: 'Creative Science Problem Solving', domain: 'Sains Lingkungan & Rekayasa Sederhana',
+        inputType: 'dynamic_list', s1Seconds: 180, s2Seconds: 60,
+        prompt: 'Anda memiliki banyak BOTOL PLASTIK BEKAS yang tidak terpakai. Untuk mengurangi pencemaran lingkungan, usulkan sebanyak mungkin metode bernilai sains atau teknis untuk memanfaatkan kembali botol tersebut!',
+        exampleNote: 'Fokuslah pada pemanfaatan yang menerapkan prinsip IPA (optik, fluida, kalor, biologi), bukan sekadar kerajinan dekoratif.',
+        s2Instruction: 'Pilih 2 solusi yang memiliki nilai rekayasa sains tertinggi (bukan sekadar wadah/kerajinan pasif):',
+        s2MaxSelect: 2,
+        s2Options: [
+          { key: 'A', text: 'Memanfaatkan botol PET bening untuk metode disinfeksi air tenaga surya (SODIS) guna mematikan patogen menggunakan radiasi UV-A dan panas matahari.' },
+          { key: 'B', text: 'Memotong botol plastik dan mengecatnya untuk dijadikan pot bunga hias di depan kelas.' },
+          { key: 'C', text: 'Mengisi botol bening dengan air dan sedikit pemutih lalu memasangnya di atap seng sebagai "solar bottle bulb" berbasis prinsip pembiasan cahaya.' },
+          { key: 'D', text: 'Menumpuk botol plastik di halaman sekolah untuk dijadikan pembatas lapangan upacara.' },
+          { key: 'E', text: 'Membakar botol plastik di ruang terbuka agar sampahnya cepat habis menjadi abu.' }
+        ]
+      },
+      {
+        id: 'CE-2', number: 6, category: 'Creative Experimental Ability', domain: 'Perpindahan Kalor & Variabel Kontrol',
+        inputType: 'experiment_structured', s1Seconds: 210, s2Seconds: 60,
+        prompt: 'Anda memiliki dua jenis cangkir: satu berbahan LOGAM dan satu berbahan PLASTIK. Untuk menyajikan kopi panas agar suhunya bertahan lebih lama dan nyaman dipegang, cangkir mana yang paling sesuai? Rancanglah metode eksperimen, alat ukur, dan langkah kerja untuk menguji dan membandingkan keduanya!',
+        exampleNote: 'Pastikan Anda menyebutkan alat ukur, prinsip sains yang diuji, serta bagaimana menjaga pengujian tetap adil (variabel kontrol).',
+        s2Instruction: 'Pilih 1 rancangan eksperimen yang memiliki pengendalian variabel (fair test) paling valid secara ilmiah:',
+        s2MaxSelect: 1,
+        s2Options: [
+          { key: 'A', text: 'Menuangkan kopi mendidih ke cangkir logam berukuran besar dan kopi hangat ke cangkir plastik berukuran kecil, lalu mencicipinya setelah 10 menit.' },
+          { key: 'B', text: 'Menuangkan volume dan suhu awal air kopi yang sama persis ke kedua cangkir berkapasitas sama, lalu mengukur penurunan suhu keduanya setiap 2 menit dengan termometer terkalibrasi di ruangan bersuhu sama.' },
+          { key: 'C', text: 'Memegang dinding luar cangkir logam dan cangkir plastik saat kosong, lalu langsung menyimpulkan mana yang lebih cocok tanpa menuangkan air panas.' },
+          { key: 'D', text: 'Meletakkan cangkir logam di dekat kipas angin dan cangkir plastik di dalam kotak tertutup, lalu membandingkan suhu akhirnya setelah 15 menit.' }
+        ]
+      },
+      {
+        id: 'PD-2', number: 7, category: 'Creative Science Product Design', domain: 'Mekanika Sederhana & Desain Rekayasa',
+        inputType: 'product_design', s1Seconds: 240, s2Seconds: 60,
+        prompt: 'Rancanglah sebuah ALAT BANTU TANAM BENIH PADI agar jarak antar-benih dan kedalaman tanamnya seragam! Beri nama alat tersebut, buatlah gambar sketsa (di kanvas atau unggah foto sketsa kertas), serta jelaskan prinsip IPA dan cara kerjanya.',
+        exampleNote: 'Fokus pada mekanisme penakar jumlah benih, pengatur jarak tanam, dan pengatur kedalaman lubang tanah tanpa bergantung pada listrik rumit.',
+        s2Instruction: 'Pilih 2 fitur mekanis terbaik agar alat tanam padi mampu menjaga jarak dan kedalaman benih tetap seragam di lahan berlumpur:',
+        s2MaxSelect: 2,
+        s2Options: [
+          { key: 'A', text: 'Silinder penakar berlubang (metering drum) yang terhubung langsung ke poros roda, sehingga setiap seperempat putaran roda menjatuhkan benih pada jarak tetap.' },
+          { key: 'B', text: 'Menghilangkan seluruh roda dan meminta petani menabur benih sambil berlari agar pekerjaan lebih cepat selesai.' },
+          { key: 'C', text: 'Sepatu pembuka alur (furrow opener) dengan pelat pembatas kedalaman (depth skid) agar ujung penanam tidak tenggelam terlalu dalam di lumpur.' },
+          { key: 'D', text: 'Membuat tangki benih setinggi 3 meter agar kapasitasnya besar meskipun pusat gravitasi alat menjadi sangat tidak stabil.' },
+          { key: 'E', text: 'Menggunakan lem perekat kuat pada lubang keluar benih agar benih tidak jatuh saat alat didorong.' }
+        ]
+      }
+    ];
+
+    const MAX_S2_SCORE = 12;
+    let publicConfig = {
+      sessionOpen: true,
+      campuses: [
+        'UIN Sayyid Ali Rahmatullah Tulungagung',
+        'Universitas Negeri Malang (UM)',
+        'Universitas Negeri Surabaya (UNESA)',
+        'Universitas Nusantara PGRI Kediri'
+      ]
+    };
+
+    let researcherSession = {
+      pin: '',
+      activeToken: '',
+      stage2Keys: {},
+      records: []
+    };
+
+    function makeEmptyResponses() {
+      return ITEMS.map(item => ({
+        itemId: item.id, s1Locked: false, s2Completed: false,
+        s1Ideas: ['', '', ''], ceTools: '', cePrinciple: '', ceProcedure: '',
+        pdName: '', pdPrinciple: '', pdMechanism: '', pdSketchMode: 'draw', pdSketchDataUrl: '',
+        s2Selected: [], s1LatencySec: 0, s2LatencySec: 0
+      }));
+    }
+
+    const state = {
+      mode: 'student', screen: 'landing',
+      participant: { name: '', nim: '', campus: '', prodi: '', semester: '' },
+      currentIdx: 0, currentStage: 1, timerHandle: null, secondsLeft: 0, stageStartTs: null,
+      responses: makeEmptyResponses()
+    };
+
+    // =========================================================================
+    // API HELPER (CORS-SAFE TEXT/PLAIN POST + 3x AUTO-RETRY)
+    // =========================================================================
+    function isApiConfigured() {
+      return API_URL && API_URL.startsWith('https://script.google.com/');
+    }
+
+    function setLoading(show, text = 'Menghubungkan ke server...') {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+    }
+
+    async function apiPost(payload, retries = 3) {
+      if (!isApiConfigured()) {
+        throw new Error('API_URL belum diisi dengan URL Google Apps Script.');
+      }
+      let lastErr = null;
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (err) {
+          lastErr = err;
+          if (attempt < retries) await new Promise(r => setTimeout(r, 1200 * attempt));
+        }
+      }
+      throw lastErr;
+    }
+
+    async function fetchPublicConfig() {
+      if (!isApiConfigured()) {
+        document.getElementById('apiConfigWarning').classList.remove('hidden');
+        renderCampusDropdown();
+        return;
+      }
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if (data.ok) {
+          publicConfig.sessionOpen = Boolean(data.sessionOpen);
+          if (Array.isArray(data.campuses) && data.campuses.length) publicConfig.campuses = data.campuses;
+        }
+      } catch (e) { /* keep fallback campuses */ }
+      renderCampusDropdown();
+      updateSessionClosedUI();
+    }
+
+    // =========================================================================
+    // CANVAS SKETCH PAD & IMAGE COMPRESSION
+    // =========================================================================
+    let canvasCtx = null, isDrawing = false, penColor = '#0f172a', canvasHistory = [];
+
+    function initSketchCanvas() {
+      const canvas = document.getElementById('pdCanvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(300, rect.width || 600);
+      const height = 240;
+      canvas.width = width * dpr; canvas.height = height * dpr;
+      canvasCtx = canvas.getContext('2d');
+      canvasCtx.scale(dpr, dpr);
+      canvasCtx.lineCap = 'round'; canvasCtx.lineJoin = 'round';
+      canvasCtx.lineWidth = 2.5; canvasCtx.strokeStyle = penColor;
+      const savedUrl = state.responses[6].pdSketchDataUrl;
+      if (savedUrl && state.responses[6].pdSketchMode === 'draw') {
+        const img = new Image();
+        img.onload = () => { canvasCtx.clearRect(0, 0, width, height); canvasCtx.drawImage(img, 0, 0, width, height); };
+        img.src = savedUrl;
+      }
+    }
+
+    function getCanvasPoint(e, canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: cx - rect.left, y: cy - rect.top };
+    }
+
+    function saveCanvasSnapshot() {
+      const canvas = document.getElementById('pdCanvas');
+      if (!canvas) return;
+      const url = canvas.toDataURL('image/png');
+      canvasHistory.push(url);
+      if (canvasHistory.length > 20) canvasHistory.shift();
+      state.responses[6].pdSketchDataUrl = url;
+      state.responses[6].pdSketchMode = 'draw';
+    }
+
+    function bindCanvasEvents() {
+      const canvas = document.getElementById('pdCanvas');
+      if (!canvas) return;
+      const startDraw = (e) => {
+        if (state.responses[6].s1Locked && state.mode === 'student') return;
+        e.preventDefault(); isDrawing = true;
+        const pt = getCanvasPoint(e, canvas);
+        canvasCtx.strokeStyle = penColor; canvasCtx.beginPath(); canvasCtx.moveTo(pt.x, pt.y);
+      };
+      const moveDraw = (e) => {
+        if (!isDrawing) return; e.preventDefault();
+        const pt = getCanvasPoint(e, canvas);
+        canvasCtx.lineTo(pt.x, pt.y); canvasCtx.stroke();
+      };
+      const endDraw = () => { if (!isDrawing) return; isDrawing = false; canvasCtx.closePath(); saveCanvasSnapshot(); };
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      window.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', moveDraw, { passive: false });
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    function compressUploadedImage(file, callback) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 1000;
+          const scale = Math.min(1, maxW / img.width);
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * scale);
+          c.height = Math.round(img.height * scale);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          callback(c.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =========================================================================
+    // UI & EXAM FLOW
+    // =========================================================================
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      document.getElementById('toastText').textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 2800);
+    }
+
+    function renderCampusDropdown() {
+      const sel = document.getElementById('inputCampus');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Pilih Perguruan Tinggi --</option>';
+      (publicConfig.campuses || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c; sel.appendChild(opt);
+      });
+      const optOther = document.createElement('option');
+      optOther.value = 'Lainnya'; optOther.textContent = 'Lainnya (Tulis di bawah)';
+      sel.appendChild(optOther);
+    }
+
+    function updateSessionClosedUI() {
+      document.getElementById('sessionClosedBanner').classList.toggle('hidden', publicConfig.sessionOpen);
+      document.getElementById('btnStartTest').disabled = !publicConfig.sessionOpen;
+      document.getElementById('btnStartTest').classList.toggle('opacity-50', !publicConfig.sessionOpen);
+    }
+
+    function clearActiveTimer() {
+      if (state.timerHandle) { clearInterval(state.timerHandle); state.timerHandle = null; }
+    }
+
+    function recordElapsedLatency() {
+      if (!state.stageStartTs) return;
+      const delta = Math.max(1, Math.round((Date.now() - state.stageStartTs) / 1000));
+      const resp = state.responses[state.currentIdx];
+      if (state.currentStage === 1) resp.s1LatencySec += delta;
+      else resp.s2LatencySec += delta;
+      state.stageStartTs = Date.now();
+    }
+
+    function formatMMSS(sec) {
+      return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+    }
+
+    function startStageTimer(durationSec) {
+      clearActiveTimer();
+      const timerBox = document.getElementById('headerTimerBox');
+      const timerDisplay = document.getElementById('timerDisplay');
+      state.stageStartTs = Date.now();
+      if (state.mode === 'reviewer') {
+        timerBox.classList.add('hidden'); timerBox.classList.remove('flex'); return;
+      }
+      state.secondsLeft = durationSec;
+      timerDisplay.textContent = formatMMSS(state.secondsLeft);
+      timerBox.classList.remove('hidden'); timerBox.classList.add('flex');
+      state.timerHandle = setInterval(() => {
+        state.secondsLeft -= 1;
+        timerDisplay.textContent = formatMMSS(Math.max(0, state.secondsLeft));
+        if (state.secondsLeft <= 20) timerDisplay.classList.add('text-amber-300');
+        else timerDisplay.classList.remove('text-amber-300');
+        if (state.secondsLeft <= 0) {
+          clearActiveTimer();
+          showToast('Waktu langkah ini habis — otomatis melanjutkan.');
+          if (state.currentStage === 1) executeLockStage1();
+          else executeFinishStage2();
+        }
+      }, 1000);
+    }
+
+    function switchScreen(name) {
+      state.screen = name;
+      document.getElementById('screenLanding').classList.toggle('hidden', name !== 'landing');
+      document.getElementById('screenExam').classList.toggle('hidden', name !== 'exam');
+      document.getElementById('screenStudentDone').classList.toggle('hidden', name !== 'done');
+      document.getElementById('screenResearcher').classList.toggle('hidden', name !== 'researcher');
+      const isResView = name === 'researcher' || (name === 'exam' && state.mode === 'reviewer');
+      document.getElementById('headerResearcherBadge').classList.toggle('hidden', !isResView);
+      document.getElementById('headerResearcherBadge').classList.toggle('flex', isResView);
+      if (name !== 'exam') {
+        clearActiveTimer();
+        document.getElementById('headerTimerBox').classList.add('hidden');
+        document.getElementById('headerTimerBox').classList.remove('flex');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderStepper() {
+      const row = document.getElementById('stepperRow');
+      row.innerHTML = '';
+      ITEMS.forEach((item, idx) => {
+        const resp = state.responses[idx];
+        const isCurrent = idx === state.currentIdx;
+        let bgClass = 'bg-slate-100 text-slate-500 border-slate-200';
+        if (resp.s2Completed) bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-300';
+        else if (isCurrent) bgClass = 'bg-[#1E3A5F] text-white border-[#1E3A5F] shadow-xs';
+        else if (resp.s1Locked) bgClass = 'bg-amber-50 text-amber-800 border-amber-300';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `border rounded-xl py-2 px-1 text-center transition text-xs font-bold ${bgClass} ${state.mode === 'reviewer' ? 'cursor-pointer hover:opacity-90' : 'cursor-default'}`;
+        btn.innerHTML = `<div>${state.mode === 'reviewer' ? item.id : 'No. ' + item.number}</div><div class="text-[10px] font-normal opacity-80">${resp.s2Completed ? 'Selesai' : (isCurrent ? 'Langkah ' + state.currentStage : 'Menunggu')}</div>`;
+        if (state.mode === 'reviewer') {
+          btn.addEventListener('click', () => { saveCurrentInputsToState(); state.currentIdx = idx; state.currentStage = 1; renderExamItem(); });
+        }
+        row.appendChild(btn);
+      });
+    }
+
+    function renderDynamicIdeaInputs(resp) {
+      const list = document.getElementById('ideaInputsList');
+      list.innerHTML = '';
+      resp.s1Ideas.forEach((val, i) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2';
+        row.innerHTML = `
+          <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
+          <input type="text" data-idea-idx="${i}" value="${val.replace(/"/g, '&quot;')}" placeholder="Ketik ide ilmiah ke-${i + 1} di sini..." class="idea-field flex-1 rounded-xl border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]" />
+        `;
+        list.appendChild(row);
+      });
+      list.querySelectorAll('.idea-field').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          resp.s1Ideas[Number(e.target.dataset.ideaIdx)] = e.target.value;
+          document.getElementById('ideaCountBadge').textContent = `${resp.s1Ideas.filter(t => t.trim().length > 0).length} ide terisi`;
+        });
+      });
+      document.getElementById('ideaCountBadge').textContent = `${resp.s1Ideas.filter(t => t.trim().length > 0).length} ide terisi`;
+    }
+
+    function saveCurrentInputsToState() {
+      const item = ITEMS[state.currentIdx];
+      const resp = state.responses[state.currentIdx];
+      if (item.inputType === 'experiment_structured') {
+        resp.ceTools = document.getElementById('ceTools').value;
+        resp.cePrinciple = document.getElementById('cePrinciple').value;
+        resp.ceProcedure = document.getElementById('ceProcedure').value;
+      } else if (item.inputType === 'product_design') {
+        resp.pdName = document.getElementById('pdName').value;
+        resp.pdPrinciple = document.getElementById('pdPrinciple').value;
+        resp.pdMechanism = document.getElementById('pdMechanism').value;
+      }
+    }
+
+    function renderStage2Options(item, resp) {
+      document.getElementById('s2Instruction').textContent = item.s2Instruction;
+      const list = document.getElementById('s2OptionsList');
+      list.innerHTML = '';
+      document.getElementById('s2SelectionBadge').textContent = `Terpilih: ${resp.s2Selected.length} / ${item.s2MaxSelect}`;
+      const serverKeyObj = researcherSession.stage2Keys[item.id] || { keys: [], rationale: '' };
+
+      item.s2Options.forEach(opt => {
+        const isSelected = resp.s2Selected.includes(opt.key);
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `option-card w-full text-left border-2 rounded-xl p-3.5 sm:p-4 flex items-start gap-3 ${isSelected ? 'option-selected' : 'border-slate-200 bg-white'}`;
+        let keyBadge = '';
+        if (state.mode === 'reviewer' && serverKeyObj.keys.includes(opt.key)) {
+          keyBadge = `<span class="ml-2 inline-flex items-center text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Kunci Valid</span>`;
+        }
+        card.innerHTML = `
+          <span class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center shrink-0 ${isSelected ? 'bg-[#1E3A5F] text-white' : 'bg-slate-100 text-slate-700'}">${opt.key}</span>
+          <div class="text-xs sm:text-sm text-slate-800 leading-relaxed flex-1">${opt.text}${keyBadge}</div>
+        `;
+        card.addEventListener('click', () => {
+          if (item.s2MaxSelect === 1) resp.s2Selected = [opt.key];
+          else {
+            if (resp.s2Selected.includes(opt.key)) resp.s2Selected = resp.s2Selected.filter(k => k !== opt.key);
+            else if (resp.s2Selected.length < item.s2MaxSelect) resp.s2Selected.push(opt.key);
+            else { showToast(`Maksimal pilih ${item.s2MaxSelect} opsi.`); return; }
+          }
+          renderStage2Options(item, resp);
+        });
+        list.appendChild(card);
+      });
+
+      const keyBox = document.getElementById('s2ReviewerKeyBox');
+      if (state.mode === 'reviewer' && serverKeyObj.rationale) {
+        keyBox.classList.remove('hidden');
+        document.getElementById('s2ReviewerRationale').textContent = serverKeyObj.rationale;
+      } else {
+        keyBox.classList.add('hidden');
+      }
+    }
+
+    function renderExamItem() {
+      const item = ITEMS[state.currentIdx];
+      const resp = state.responses[state.currentIdx];
+      document.getElementById('progressText').textContent = `Butir ${item.number} dari ${ITEMS.length}`;
+      document.getElementById('itemCodeBadge').textContent = state.mode === 'reviewer' ? item.id : `Soal ${item.number}`;
+      document.getElementById('itemCategoryTitle').textContent = item.category;
+      document.getElementById('itemDomainTag').textContent = `Topik: ${item.domain}`;
+      document.getElementById('itemPromptText').textContent = item.prompt;
+      document.getElementById('itemExampleNote').textContent = item.exampleNote;
+
+      const revBanner = document.getElementById('reviewerBanner');
+      const btnPrevRev = document.getElementById('btnPrevReview');
+      if (state.mode === 'reviewer') {
+        revBanner.classList.remove('hidden');
+        document.getElementById('btnSwitchStageReview').textContent = state.currentStage === 1 ? 'Lihat Langkah 2' : 'Lihat Langkah 1';
+        btnPrevRev.classList.toggle('hidden', state.currentIdx === 0);
+        btnPrevRev.classList.toggle('inline-flex', state.currentIdx > 0);
+      } else {
+        revBanner.classList.add('hidden'); btnPrevRev.classList.add('hidden'); btnPrevRev.classList.remove('inline-flex');
+      }
+
+      const stageBadge = document.getElementById('stageBadge');
+      const nextBtnLabel = document.getElementById('btnLockAndNextLabel');
+      if (state.currentStage === 1) {
+        stageBadge.className = 'inline-flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-full bg-sky-100 text-[#1E3A5F]';
+        stageBadge.innerHTML = '<i data-lucide="pen-tool" class="w-3.5 h-3.5"></i> Langkah 1: Ide Orisinal';
+        document.getElementById('promptStageSubtitle').textContent = 'Langkah 1 — Tuliskan Ide Orisinal Anda';
+        document.getElementById('stage1Container').classList.remove('hidden');
+        document.getElementById('stage2Container').classList.add('hidden');
+        document.getElementById('s1DynamicListWrap').classList.toggle('hidden', item.inputType !== 'dynamic_list');
+        document.getElementById('s1ExperimentWrap').classList.toggle('hidden', item.inputType !== 'experiment_structured');
+        document.getElementById('s1DesignWrap').classList.toggle('hidden', item.inputType !== 'product_design');
+        if (item.inputType === 'dynamic_list') renderDynamicIdeaInputs(resp);
+        else if (item.inputType === 'experiment_structured') {
+          document.getElementById('ceTools').value = resp.ceTools;
+          document.getElementById('cePrinciple').value = resp.cePrinciple;
+          document.getElementById('ceProcedure').value = resp.ceProcedure;
+        } else {
+          document.getElementById('pdName').value = resp.pdName;
+          document.getElementById('pdPrinciple').value = resp.pdPrinciple;
+          document.getElementById('pdMechanism').value = resp.pdMechanism;
+          setTimeout(initSketchCanvas, 40);
+        }
+        nextBtnLabel.textContent = state.mode === 'reviewer' ? 'Lanjut ke Langkah 2' : 'Kunci Langkah 1 & Lanjut';
+        startStageTimer(item.s1Seconds);
+      } else {
+        stageBadge.className = 'inline-flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
+        stageBadge.innerHTML = '<i data-lucide="check-square" class="w-3.5 h-3.5"></i> Langkah 2: Evaluasi Ide';
+        document.getElementById('promptStageSubtitle').textContent = 'Konteks Soal — Langkah 2 (Evaluasi Pilihan)';
+        document.getElementById('stage1Container').classList.add('hidden');
+        document.getElementById('stage2Container').classList.remove('hidden');
+        renderStage2Options(item, resp);
+        const isLast = state.currentIdx === ITEMS.length - 1;
+        nextBtnLabel.textContent = isLast ? (state.mode === 'reviewer' ? 'Selesai Review' : 'Kirim Jawaban & Selesai') : `Simpan & Lanjut Soal ${item.number + 1}`;
+        startStageTimer(item.s2Seconds);
+      }
+      renderStepper();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function executeLockStage1() {
+      saveCurrentInputsToState();
+      recordElapsedLatency();
+      state.responses[state.currentIdx].s1Locked = true;
+      state.currentStage = 2;
+      renderExamItem();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function executeFinishStage2() {
+      recordElapsedLatency();
+      state.responses[state.currentIdx].s2Completed = true;
+      if (state.currentIdx < ITEMS.length - 1) {
+        state.currentIdx += 1; state.currentStage = 1;
+        renderExamItem(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+      }
+      if (state.mode === 'reviewer') {
+        switchScreen('researcher'); showToast('Simulasi review selesai.'); return;
+      }
+
+      clearActiveTimer();
+      setLoading(true, 'Mengirim jawaban & sketsa ke server (auto-retry aktif)...');
+      try {
+        const res = await apiPost({
+          action: 'submit',
+          participant: state.participant,
+          responses: state.responses
+        }, 3);
+        setLoading(false);
+        if (!res.ok) throw new Error(res.message || 'Gagal menyimpan jawaban.');
+        document.getElementById('receiptCode').textContent = res.receiptCode;
+        document.getElementById('receiptName').textContent = state.participant.name;
+        document.getElementById('receiptNim').textContent = state.participant.nim;
+        document.getElementById('receiptCampus').textContent = state.participant.campus;
+        document.getElementById('receiptTime').textContent = res.submittedPretty;
+        switchScreen('done');
+      } catch (err) {
+        setLoading(false);
+        showToast('Gagal mengirim ke server. Periksa koneksi internet Anda lalu klik Kirim lagi.');
+      }
+    }
+
+    // =========================================================================
+    // RESEARCHER PORTAL (SERVER-BACKED)
+    // =========================================================================
+    async function refreshResearcherData(pin) {
+      setLoading(true, 'Memverifikasi PIN & memuat database...');
+      try {
+        const res = await apiPost({ action: 'researcher_login', pin }, 2);
+        setLoading(false);
+        if (!res.ok) return false;
+        researcherSession.pin = pin;
+        researcherSession.activeToken = res.config.activeToken;
+        researcherSession.stage2Keys = res.stage2Keys || {};
+        researcherSession.records = res.records || [];
+        publicConfig.sessionOpen = Boolean(res.config.sessionOpen);
+        publicConfig.campuses = res.config.campuses || publicConfig.campuses;
+        renderResearcherDb();
+        renderResearcherItems();
+        renderResearcherSettings();
+        return true;
+      } catch (err) {
+        setLoading(false);
+        return false;
+      }
+    }
+
+    function switchResearcherTab(tab) {
+      document.getElementById('paneResDb').classList.toggle('hidden', tab !== 'db');
+      document.getElementById('paneResItems').classList.toggle('hidden', tab !== 'items');
+      document.getElementById('paneResSettings').classList.toggle('hidden', tab !== 'settings');
+      const map = { db: 'tabResDb', items: 'tabResItems', settings: 'tabResSettings' };
+      Object.entries(map).forEach(([k, id]) => {
+        document.getElementById(id).className = k === tab
+          ? 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-900 transition'
+          : 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 text-slate-200 hover:bg-white/20 transition';
+      });
+    }
+
+    function renderResearcherDb() {
+      const recs = researcherSession.records;
+      document.getElementById('resTotalCount').textContent = String(recs.length);
+      const tbody = document.getElementById('resDbTableBody');
+      tbody.innerHTML = '';
+      if (!recs.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400">Belum ada responden yang mengirim jawaban ke server.</td></tr>';
+        return;
+      }
+      recs.forEach(rec => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50';
+        tr.innerHTML = `
+          <td class="py-3 px-3.5 font-mono font-bold text-[#1E3A5F]">${rec.receiptCode}</td>
+          <td class="py-3 px-3.5"><div class="font-bold text-slate-900">${rec.participant.name}</div><div class="text-[11px] text-slate-500">${rec.participant.nim} • ${rec.participant.prodi} (Sem ${rec.participant.semester})</div></td>
+          <td class="py-3 px-3.5 text-slate-700">${rec.participant.campus}</td>
+          <td class="py-3 px-3.5 text-center font-bold text-[#2B6CB0]">${rec.totalFluency}</td>
+          <td class="py-3 px-3.5 text-center"><span class="inline-flex px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">${rec.totalEval} / ${MAX_S2_SCORE}</span></td>
+          <td class="py-3 px-3.5 text-center"><button type="button" data-receipt="${rec.receiptCode}" class="btn-unlock text-rose-600 hover:underline font-semibold">Hapus/Buka Kunci</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('.btn-unlock').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          setLoading(true, 'Membuka kunci NIM di server...');
+          const res = await apiPost({ action: 'researcher_unlock_nim', pin: researcherSession.pin, receiptCode: btn.dataset.receipt });
+          setLoading(false);
+          if (res.ok) {
+            await refreshResearcherData(researcherSession.pin);
+            showToast('Data dihapus & kunci NIM dibuka kembali.');
+          }
+        });
+      });
+    }
+
+    function renderResearcherItems() {
+      const container = document.getElementById('resItemsList');
+      container.innerHTML = '';
+      ITEMS.forEach(item => {
+        const kObj = researcherSession.stage2Keys[item.id] || { keys: [], rationale: '' };
+        const optsHtml = item.s2Options.map(o => {
+          const isKey = kObj.keys.includes(o.key);
+          return `<li class="text-xs ${isKey ? 'font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5' : 'text-slate-600 px-2.5 py-1'}"><strong>${o.key}.</strong> ${o.text} ${isKey ? ' ✓ (Kunci)' : ''}</li>`;
+        }).join('');
+        const card = document.createElement('div');
+        card.className = 'border border-slate-200 rounded-xl p-4 space-y-2.5 bg-slate-50/50';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div><span class="text-xs font-bold bg-[#1E3A5F] text-white px-2 py-0.5 rounded mr-2">${item.id}</span><span class="text-sm font-bold text-slate-900">${item.category}</span></div>
+            <span class="text-[11px] font-mono text-slate-500">S1: ${item.s1Seconds}s • S2: ${item.s2Seconds}s</span>
+          </div>
+          <p class="text-xs text-slate-800"><strong>Langkah 1:</strong> ${item.prompt}</p>
+          <ul class="space-y-1">${optsHtml}</ul>
+          <p class="text-[11px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2.5"><strong>Rasional:</strong> ${kObj.rationale}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderResearcherSettings() {
+      document.getElementById('settingTokenInput').value = researcherSession.activeToken;
+      document.getElementById('settingCampusesInput').value = (publicConfig.campuses || []).join('\n');
+      const statusLabel = document.getElementById('sessionStatusLabel');
+      const toggleBtn = document.getElementById('btnToggleSessionOpen');
+      if (publicConfig.sessionOpen) {
+        statusLabel.textContent = 'Sesi sedang DIBUKA untuk mahasiswa.';
+        toggleBtn.textContent = 'Tutup Sesi';
+        toggleBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-100 text-rose-800 hover:bg-rose-200 transition';
+      } else {
+        statusLabel.textContent = 'Sesi sedang DITUTUP.';
+        toggleBtn.textContent = 'Buka Sesi';
+        toggleBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition';
+      }
+    }
+
+    function downloadCsv(filename, rows) {
+      if (!rows.length) { showToast('Belum ada data.'); return; }
+      const headers = Object.keys(rows[0]);
+      const esc = (v) => `"${String(v !== undefined && v !== null ? v : '').replace(/"/g, '""')}"`;
+      const csv = '\uFEFF' + [headers.map(esc).join(','), ...rows.map(r => headers.map(h => esc(r[h])).join(','))].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // =========================================================================
+    // INIT & EVENTS
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      bindCanvasEvents();
+      switchScreen('landing');
+      fetchPublicConfig();
+
+      // Stealth 5-click trigger
+      let logoClicks = 0, clickTimer = null;
+      document.getElementById('stealthLogoTrigger').addEventListener('click', () => {
+        logoClicks += 1;
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => { logoClicks = 0; }, 2200);
+        if (logoClicks >= 5) {
+          logoClicks = 0;
+          document.getElementById('inputResearcherPin').value = '';
+          document.getElementById('pinErrorMsg').classList.add('hidden');
+          document.getElementById('researcherLoginModal').classList.remove('hidden');
+          setTimeout(() => document.getElementById('inputResearcherPin').focus(), 50);
+        }
+      });
+
+      const submitPin = async () => {
+        const pin = document.getElementById('inputResearcherPin').value.trim();
+        const ok = await refreshResearcherData(pin);
+        if (ok) {
+          document.getElementById('researcherLoginModal').classList.add('hidden');
+          state.mode = 'reviewer';
+          switchScreen('researcher');
+          switchResearcherTab('db');
+        } else {
+          document.getElementById('pinErrorMsg').classList.remove('hidden');
+        }
+      };
+      document.getElementById('btnPinSubmit').addEventListener('click', submitPin);
+      document.getElementById('inputResearcherPin').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPin(); });
+      document.getElementById('btnPinCancel').addEventListener('click', () => document.getElementById('researcherLoginModal').classList.add('hidden'));
+
+      document.getElementById('btnExitResearcher').addEventListener('click', () => {
+        state.mode = 'student'; state.responses = makeEmptyResponses();
+        switchScreen('landing'); fetchPublicConfig();
+      });
+
+      document.getElementById('inputCampus').addEventListener('change', (e) => {
+        document.getElementById('customCampusWrap').classList.toggle('hidden', e.target.value !== 'Lainnya');
+      });
+
+      // Student Start (Server-side Token + Single-Attempt NIM Verification)
+      document.getElementById('btnStartTest').addEventListener('click', async () => {
+        const errBox = document.getElementById('landingError');
+        const lockedBox = document.getElementById('alreadySubmittedBox');
+        errBox.classList.add('hidden'); lockedBox.classList.add('hidden');
+
+        const name = document.getElementById('inputName').value.trim();
+        const nim = document.getElementById('inputNim').value.trim();
+        let campus = document.getElementById('inputCampus').value;
+        if (campus === 'Lainnya') campus = document.getElementById('inputCustomCampus').value.trim();
+        const prodi = document.getElementById('inputProdi').value.trim();
+        const semester = document.getElementById('inputSemester').value;
+        const token = document.getElementById('inputToken').value.trim().toUpperCase();
+        const consent = document.getElementById('inputConsent').checked;
+
+        if (!name || !nim || !campus || !prodi || !semester || !token) {
+          errBox.textContent = 'Mohon lengkapi seluruh data identitas dan kode token sesi kelas.';
+          errBox.classList.remove('hidden'); return;
+        }
+        if (!consent) {
+          errBox.textContent = 'Silakan centang kotak persetujuan partisipasi sebelum memulai.';
+          errBox.classList.remove('hidden'); return;
+        }
+
+        setLoading(true, 'Memeriksa token & status NIM di server...');
+        try {
+          const res = await apiPost({ action: 'start', token, campus, nim }, 2);
+          setLoading(false);
+          if (!res.ok) {
+            if (res.code === 'ALREADY_SUBMITTED' && res.existing) {
+              const ex = res.existing;
+              document.getElementById('alreadySubmittedDetail').textContent =
+                `NIM ${ex.nim} (${ex.name} — ${ex.campus}) sudah tercatat menyelesaikan asesmen pada ${ex.submittedPretty} dengan kode bukti ${ex.receiptCode}. Pengisian ulang tidak diperkenankan.`;
+              lockedBox.classList.remove('hidden');
+            } else {
+              errBox.textContent = res.message || 'Gagal memulai asesmen.';
+              errBox.classList.remove('hidden');
+            }
+            return;
+          }
+          state.mode = 'student';
+          state.participant = { name, nim, campus, prodi, semester };
+          state.currentIdx = 0; state.currentStage = 1;
+          state.responses = makeEmptyResponses(); canvasHistory = [];
+          switchScreen('exam'); renderExamItem();
+        } catch (err) {
+          setLoading(false);
+          errBox.textContent = 'Gagal terhubung ke server. Pastikan koneksi internet aktif dan API_URL sudah benar.';
+          errBox.classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('btnAddIdea').addEventListener('click', () => {
+        const resp = state.responses[state.currentIdx];
+        if (resp.s1Ideas.length >= 10) { showToast('Maksimal 10 kolom ide per butir.'); return; }
+        resp.s1Ideas.push(''); renderDynamicIdeaInputs(resp);
+      });
+
+      document.getElementById('tabSketchDraw').addEventListener('click', () => {
+        document.getElementById('sketchDrawPane').classList.remove('hidden');
+        document.getElementById('sketchUploadPane').classList.add('hidden');
+        document.getElementById('tabSketchDraw').className = 'px-3 py-1 rounded-md bg-white text-[#1E3A5F] shadow-sm transition';
+        document.getElementById('tabSketchUpload').className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+        state.responses[6].pdSketchMode = 'draw'; setTimeout(initSketchCanvas, 40);
+      });
+
+      document.getElementById('tabSketchUpload').addEventListener('click', () => {
+        document.getElementById('sketchDrawPane').classList.add('hidden');
+        document.getElementById('sketchUploadPane').classList.remove('hidden');
+        document.getElementById('tabSketchUpload').className = 'px-3 py-1 rounded-md bg-white text-[#1E3A5F] shadow-sm transition';
+        document.getElementById('tabSketchDraw').className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+        state.responses[6].pdSketchMode = 'upload';
+      });
+
+      document.querySelectorAll('.pen-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          penColor = btn.dataset.color;
+          document.querySelectorAll('.pen-color-btn').forEach(b => b.classList.remove('ring-2', 'ring-offset-1', 'ring-[#2B6CB0]'));
+          btn.classList.add('ring-2', 'ring-offset-1', 'ring-[#2B6CB0]');
+        });
+      });
+
+      document.getElementById('btnCanvasClear').addEventListener('click', () => {
+        const canvas = document.getElementById('pdCanvas');
+        if (!canvas || !canvasCtx) return;
+        canvasCtx.clearRect(0, 0, canvas.getBoundingClientRect().width, 240);
+        canvasHistory = []; state.responses[6].pdSketchDataUrl = '';
+      });
+
+      document.getElementById('btnCanvasUndo').addEventListener('click', () => {
+        const canvas = document.getElementById('pdCanvas');
+        if (!canvas || !canvasCtx) return;
+        const w = canvas.getBoundingClientRect().width;
+        canvasHistory.pop(); canvasCtx.clearRect(0, 0, w, 240);
+        if (canvasHistory.length > 0) {
+          const prevUrl = canvasHistory[canvasHistory.length - 1];
+          const img = new Image(); img.onload = () => canvasCtx.drawImage(img, 0, 0, w, 240);
+          img.src = prevUrl; state.responses[6].pdSketchDataUrl = prevUrl;
+        } else state.responses[6].pdSketchDataUrl = '';
+      });
+
+      document.getElementById('btnTriggerUpload').addEventListener('click', () => document.getElementById('pdFileInput').click());
+      document.getElementById('pdFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        compressUploadedImage(file, (compressedUrl) => {
+          state.responses[6].pdSketchDataUrl = compressedUrl;
+          state.responses[6].pdSketchMode = 'upload';
+          document.getElementById('pdUploadPreview').src = compressedUrl;
+          document.getElementById('pdUploadPreviewWrap').classList.remove('hidden');
+          showToast('Foto sketsa berhasil dikompresi & dimuat.');
+        });
+      });
+      document.getElementById('btnRemoveUpload').addEventListener('click', () => {
+        state.responses[6].pdSketchDataUrl = ''; document.getElementById('pdFileInput').value = '';
+        document.getElementById('pdUploadPreviewWrap').classList.add('hidden');
+      });
+
+      document.getElementById('btnLockAndNext').addEventListener('click', () => {
+        if (state.currentStage === 1) {
+          if (state.mode === 'reviewer') executeLockStage1();
+          else document.getElementById('confirmModal').classList.remove('hidden');
+        } else {
+          const item = ITEMS[state.currentIdx];
+          const resp = state.responses[state.currentIdx];
+          if (state.mode === 'student' && resp.s2Selected.length < item.s2MaxSelect) {
+            showToast(`Silakan pilih tepat ${item.s2MaxSelect} opsi terlebih dahulu.`); return;
+          }
+          executeFinishStage2();
+        }
+      });
+
+      document.getElementById('btnModalCancel').addEventListener('click', () => document.getElementById('confirmModal').classList.add('hidden'));
+      document.getElementById('btnModalConfirm').addEventListener('click', () => { document.getElementById('confirmModal').classList.add('hidden'); executeLockStage1(); });
+      document.getElementById('btnSwitchStageReview').addEventListener('click', () => { saveCurrentInputsToState(); state.currentStage = state.currentStage === 1 ? 2 : 1; renderExamItem(); });
+      document.getElementById('btnPrevReview').addEventListener('click', () => { if (state.currentIdx > 0) { saveCurrentInputsToState(); state.currentIdx -= 1; state.currentStage = 1; renderExamItem(); } });
+      document.getElementById('btnBackToResearcherPortal').addEventListener('click', () => switchScreen('researcher'));
+      document.getElementById('btnDoneBackHome').addEventListener('click', () => {
+        ['inputName', 'inputNim', 'inputProdi', 'inputSemester', 'inputToken'].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('inputConsent').checked = false;
+        switchScreen('landing');
+      });
+
+      // Researcher Portal Controls
+      document.getElementById('tabResDb').addEventListener('click', () => switchResearcherTab('db'));
+      document.getElementById('tabResItems').addEventListener('click', () => switchResearcherTab('items'));
+      document.getElementById('tabResSettings').addEventListener('click', () => switchResearcherTab('settings'));
+      document.getElementById('btnRefreshDb').addEventListener('click', () => refreshResearcherData(researcherSession.pin));
+      document.getElementById('btnLaunchReviewSim').addEventListener('click', () => {
+        state.mode = 'reviewer'; state.currentIdx = 0; state.currentStage = 1; state.responses = makeEmptyResponses();
+        switchScreen('exam'); renderExamItem();
+      });
+
+      document.getElementById('btnSaveToken').addEventListener('click', async () => {
+        const t = document.getElementById('settingTokenInput').value.trim().toUpperCase();
+        if (t.length < 3) { showToast('Token minimal 3 karakter.'); return; }
+        setLoading(true, 'Menyimpan token...');
+        const res = await apiPost({ action: 'researcher_update_config', pin: researcherSession.pin, activeToken: t });
+        setLoading(false);
+        if (res.ok) { researcherSession.activeToken = t; showToast(`Token diperbarui: ${t}`); }
+      });
+
+      document.getElementById('btnToggleSessionOpen').addEventListener('click', async () => {
+        const nextOpen = !publicConfig.sessionOpen;
+        setLoading(true, 'Mengubah status sesi...');
+        const res = await apiPost({ action: 'researcher_update_config', pin: researcherSession.pin, sessionOpen: nextOpen });
+        setLoading(false);
+        if (res.ok) { publicConfig.sessionOpen = nextOpen; renderResearcherSettings(); showToast(nextOpen ? 'Sesi DIBUKA.' : 'Sesi DITUTUP.'); }
+      });
+
+      document.getElementById('btnSavePin').addEventListener('click', async () => {
+        const np = document.getElementById('settingPinInput').value.trim();
+        if (np.length < 4) { showToast('PIN minimal 4 karakter.'); return; }
+        setLoading(true, 'Memperbarui PIN...');
+        const res = await apiPost({ action: 'researcher_update_config', pin: researcherSession.pin, newPin: np });
+        setLoading(false);
+        if (res.ok) { researcherSession.pin = np; document.getElementById('settingPinInput').value = ''; showToast('PIN peneliti diperbarui.'); }
+      });
+
+      document.getElementById('btnSaveCampuses').addEventListener('click', async () => {
+        const lines = document.getElementById('settingCampusesInput').value.split('\n').map(x => x.trim()).filter(Boolean);
+        if (!lines.length) { showToast('Masukkan minimal 1 perguruan tinggi.'); return; }
+        setLoading(true, 'Menyimpan daftar kampus...');
+        const res = await apiPost({ action: 'researcher_update_config', pin: researcherSession.pin, campuses: lines });
+        setLoading(false);
+        if (res.ok) { publicConfig.campuses = lines; renderCampusDropdown(); showToast(`Daftar kampus disimpan (${lines.length}).`); }
+      });
+
+      document.getElementById('btnExportAllCsv').addEventListener('click', () => {
+        const rows = researcherSession.records.map(rec => {
+          const r = {
+            Receipt_ID: rec.receiptCode, Timestamp_ISO: rec.submittedAt, Nama_Peserta: rec.participant.name,
+            NIM: rec.participant.nim, Asal_Kampus: rec.participant.campus,
+            Program_Studi: rec.participant.prodi, Semester: rec.participant.semester
+          };
+          ITEMS.forEach((it, idx) => {
+            const resp = rec.responses[idx] || {};
+            const k = it.id.replace(/[^A-Za-z0-9]/g, '');
+            const ideas = idx < 5 ? (resp.s1Ideas || []).filter(Boolean).join(' | ') : (idx === 5 ? `${resp.ceTools || ''}; ${resp.cePrinciple || ''}; ${resp.ceProcedure || ''}` : `${resp.pdName || ''}; ${resp.pdPrinciple || ''}; ${resp.pdMechanism || ''}`);
+            r[`${k}_S1_Text`] = ideas;
+            if (idx < 4) r[`${k}_Flu_Rater`] = '';
+            r[`${k}_Flx_Rater`] = ''; r[`${k}_Org_Rater`] = '';
+            r[`${k}_S1_Sec`] = resp.s1LatencySec || 0;
+            r[`${k}_S2_Choice`] = (resp.s2Selected || []).join(';');
+            r[`${k}_S2_Sec`] = resp.s2LatencySec || 0;
+            if (it.id === 'PD-2') r.PD2_Sketch_URL = resp.pdSketchDataUrl || '';
+          });
+          r.Total_S1_FluRaw = rec.totalFluency;
+          r.Total_S2_EvalScore = rec.totalEval;
+          r.Total_S2_EvalPct = rec.evalPct;
+          return r;
+        });
+        downloadCsv(`SCT_ETEP_Wide_SPSS_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+      });
+
+      document.getElementById('btnExportLongCsv').addEventListener('click', () => {
+        const rows = [];
+        researcherSession.records.forEach(rec => {
+          ITEMS.forEach((it, idx) => {
+            const resp = rec.responses[idx] || {};
+            const k = it.id.replace(/[^A-Za-z0-9]/g, '');
+            if (idx < 5) {
+              (resp.s1Ideas || []).map(x => String(x || '').trim()).filter(Boolean).forEach((txt, iOrd) => {
+                rows.push({ Receipt_ID: rec.receiptCode, NIM: rec.participant.nim, Asal_Kampus: rec.participant.campus, Program_Studi: rec.participant.prodi, Semester: rec.participant.semester, Item_Code: k, Idea_Order: iOrd + 1, Idea_Text: txt, Category_Code: '', Originality_Score: '' });
+              });
+            }
+          });
+        });
+        downloadCsv(`SCT_ETEP_Long_Originality_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+      });
+    });
+  </script>
+</body>
+</html>
